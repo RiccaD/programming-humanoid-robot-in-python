@@ -21,7 +21,7 @@
 
 
 from pid import PIDAgent
-from keyframes import hello
+from keyframes import hello, wipe_forehead, rightBellyToStand
 
 
 class AngleInterpolationAgent(PIDAgent):
@@ -35,17 +35,39 @@ class AngleInterpolationAgent(PIDAgent):
 
     def think(self, perception):
         target_joints = self.angle_interpolation(self.keyframes, perception)
-        target_joints['RHipYawPitch'] = target_joints['LHipYawPitch'] # copy missing joint in keyframes
+        print("Target joints:", target_joints)
+        if 'LHipYawPitch' in target_joints:
+            target_joints['RHipYawPitch'] = target_joints['LHipYawPitch'] # copy missing joint in keyframes
         self.target_joints.update(target_joints)
         return super(AngleInterpolationAgent, self).think(perception)
 
     def angle_interpolation(self, keyframes, perception):
         target_joints = {}
-        # YOUR CODE HERE
+        
+        #here
+        names, times, keys = keyframes
+        currentTime = perception.time 
+        
+        for i, jointName in enumerate(names):
+            jointTime = times[i]
+            jointKey = keys[i]
+            updatedCurrentTime = currentTime % max(jointTime)
+            
+            for j in range(1, len(jointTime)):
+                if updatedCurrentTime < jointTime[j]:
+                    t = (updatedCurrentTime - jointTime[j-1]) / (jointTime[j] - jointTime[j-1])
+                    
+                    p0 = jointKey[j-1][0]
+                    p1 = p0 + jointKey[j-1][1][2] * (jointTime[j] - jointTime[j-1]) / 3
+                    p2 = jointKey[j][0] + jointKey[j][2][2] * (jointTime[j] - jointTime[j-1]) / 3
+                    p3 = jointKey[j][0]
 
+                    target_joints[jointName] = (1-t)**3*p0+3*(1-t)**2*t*p1+3*(1-t)*t**2*p2+t**3*p3
+                    break
+        
         return target_joints
 
 if __name__ == '__main__':
     agent = AngleInterpolationAgent()
-    agent.keyframes = hello()  # CHANGE DIFFERENT KEYFRAMES
+    agent.keyframes = rightBellyToStand()  # CHANGE DIFFERENT KEYFRAMES
     agent.run()

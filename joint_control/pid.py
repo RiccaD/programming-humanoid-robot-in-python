@@ -33,9 +33,10 @@ class PIDController(object):
         self.u = np.zeros(size)
         self.e1 = np.zeros(size)
         self.e2 = np.zeros(size)
-        # ADJUST PARAMETERS BELOW
+        
+        # here
         delay = 0
-        self.Kp = 0
+        self.Kp = 15
         self.Ki = 0
         self.Kd = 0
         self.y = deque(np.zeros(size), maxlen=delay + 1)
@@ -52,8 +53,20 @@ class PIDController(object):
         @param sensor: current values from sensor
         @return control signal
         '''
-        # YOUR CODE HERE
-
+        
+        # here
+        error = target - sensor
+        self.e2 += error * self.dt
+        P = self.Kp * error
+        I = self.Ki * self.e2
+        D = self.Kd * (error - self.e1) / self.dt
+        self.u = P + I + D
+        self.e1 = error 
+        
+        last_predicted_angle = self.y[-1]
+        predicted_angle = last_predicted_angle + self.u * self.dt
+        self.y.append(predicted_angle)
+        
         return self.u
 
 
