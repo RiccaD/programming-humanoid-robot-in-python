@@ -32,16 +32,16 @@ class ClientAgent(object):
     
     def get_angle(self, joint_name):
         '''get sensor value of given joint'''
-        # YOUR CODE HERE
+        return self.server.get_angle(joint_name)
     
     def set_angle(self, joint_name, angle):
         '''set target angle of joint for PID controller
         '''
-        # YOUR CODE HERE
+        return self.server.set_angle(joint_name, angle)
 
     def get_posture(self):
         '''return current posture of robot'''
-        # YOUR CODE HERE
+        return self.server.get_posture()
 
     def execute_keyframes(self, keyframes):
         '''excute keyframes, note this function is blocking call,

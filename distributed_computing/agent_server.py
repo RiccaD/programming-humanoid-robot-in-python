@@ -12,6 +12,8 @@
 '''
 
 # add PYTHONPATH
+from xmlrpc.server import SimpleXMLRPCServer
+
 import os
 import sys
 sys.path.append(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', 'kinematics'))
@@ -22,16 +24,18 @@ from inverse_kinematics import InverseKinematicsAgent
 class ServerAgent(InverseKinematicsAgent):
     '''ServerAgent provides RPC service
     '''
-    # YOUR CODE HERE
+    def __init__(self):
+        self.server = SimpleXMLRPCServer(("0.0.0.0", 8000))
+        self.server.register_instance(agent)
     
     def get_angle(self, joint_name):
         '''get sensor value of given joint'''
-        # YOUR CODE HERE
+        return self.perception.joint[joint_name]
     
     def set_angle(self, joint_name, angle):
         '''set target angle of joint for PID controller
         '''
-        # YOUR CODE HERE
+        self.perception.joint[joint_name] = angle 
 
     def get_posture(self):
         '''return current posture of robot'''

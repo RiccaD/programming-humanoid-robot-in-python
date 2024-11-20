@@ -21,7 +21,7 @@ import os
 import sys
 sys.path.append(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', 'joint_control'))
 
-from numpy.matlib import matrix, identity
+from numpy.matlib import matrix, identity, cos, sin, dot
 
 from recognize_posture import PostureRecognitionAgent
 
@@ -36,8 +36,11 @@ class ForwardKinematicsAgent(PostureRecognitionAgent):
         self.transforms = {n: identity(4) for n in self.joint_names}
 
         # chains defines the name of chain and joints of the chain
-        self.chains = {'Head': ['HeadYaw', 'HeadPitch']
-                       # YOUR CODE HERE
+        self.chains = {"Head": ["HeadYaw", "HeadPitch"], 
+                       "LArm": ["LShoulderPitch", "LShoulderRoll", "LElbowYaw", "LElbowRoll"], 
+                       "LLeg": ["LHipRoll", "LHipPitch", "LKneePitch", "LAnklePitch", "RAnkleRoll"], 
+                       "RArm": ["RShoulderPitch", "RShoulderRoll", "RElbowYaw", "RElbowRoll"], 
+                       "RLeg": ["RHipRoll", "RHipPitch", "RKneePitch", "RAnklePitch", "LAnkleRoll"]
                        }
 
     def think(self, perception):
@@ -53,8 +56,33 @@ class ForwardKinematicsAgent(PostureRecognitionAgent):
         :rtype: 4x4 matrix
         '''
         T = identity(4)
-        # YOUR CODE HERE
-
+        c = cos(joint_angle)
+        s = sin(joint_angle)
+        
+        #X
+        if joint_name in ["RHipRoll","RAnkleRoll","LHipRoll","LAnkleRoll","LElbowYaw","RElbowYaw"]:
+            T[0:3, 0:3] = matrix([
+                [1, 0, 0],
+                [0, c, -s],
+                [0, s, c]
+            ])
+            
+        #Y
+        elif joint_name in ["RHipPitch","RKneePitch","RAnklePitch","LHipPitch","LKneePitch","LAnklePitch","LShoulderPitch","RShoulderPitch","HeadPitch"]:
+            T[0:3, 0:3] = matrix([
+                [c, 0, s],
+                [0, 1, 0],
+                [-s, 0, c]
+            ])
+            
+        #Z
+        elif joint_name in ["LShoulderRoll","LElbowRoll","RShoulderRoll","RElbowRoll","HeadYaw"]:
+            T[0:3, 0:3] = matrix([
+                [c, -s, 0],
+                [s, c, 0],
+                [0, 0, 1]
+            ])
+            
         return T
 
     def forward_kinematics(self, joints):
@@ -67,7 +95,7 @@ class ForwardKinematicsAgent(PostureRecognitionAgent):
             for joint in chain_joints:
                 angle = joints[joint]
                 Tl = self.local_trans(joint, angle)
-                # YOUR CODE HERE
+                T = dot(T, Tl)
 
                 self.transforms[joint] = T
 
